@@ -18,7 +18,7 @@ if os.path.exists('../data/userFeature.csv'):
     user_feature=pd.read_csv('../data/userFeature.csv')
 else:
     userFeature_data = []
-    with open('../data/userFeature.data', 'r') as f:
+    with open('../data/userFeat_head10.data', 'r') as f:
         for i, line in enumerate(f):
             line = line.strip().split('|')
             userFeature_dict = {}
@@ -71,7 +71,7 @@ data['topic3Rate'] = (data['topic3size'] / data['topicNum'])[data['topicNum'] !=
 data['topic3Rate'][data['topicNum'] == 0] = 0
 
 data=data.fillna('-1')
-one_hot_feature=['LBS','carrier','consumptionAbility','education','gender','house','os','ct','marriageStatus','advertiserId','campaignId', 'creativeId',
+one_hot_feature=['LBS','age','carrier','consumptionAbility','education','gender','house','os','ct','marriageStatus','advertiserId','campaignId', 'creativeId',
        'adCategoryId', 'productId', 'productType']
 vector_feature=['appIdAction','appIdInstall','interest1','interest2','interest3','interest4','interest5','kw1','kw2','kw3','topic1','topic2','topic3']
 for feature in one_hot_feature:
@@ -90,20 +90,6 @@ enc = OneHotEncoder()
 
 beginFeat.append('creativeSize')
 beginFeat.append('age')
-beginFeat.append('interestNum')
-beginFeat.append('interest1Rate)
-beginFeat.append('interest2Rate')
-beginFeat.append('interest3Rate')
-beginFeat.append('interest4Rate')
-beginFeat.append('interest5Rate')
-beginFeat.append('kwNum')
-beginFeat.append('kw1Num')
-beginFeat.append('kw2Num')
-beginFeat.append('kw3Num')
-beginFeat.append('topicNum')
-beginFeat.append('topic1Num')
-beginFeat.append('topic2Num')
-beginFeat.append('topic3Num')
 train_x=train[beginFeat]
 test_x=test[beginFeat]
 
@@ -140,16 +126,16 @@ def LGB_test(train_x,train_y,test_x,test_y):
 def LGB_predict(train_x,train_y,test_x,res):
     print("LGB test")
     clf = lgb.LGBMClassifier(
-        boosting_type='gbdt', num_leaves=70, reg_alpha=0.0, reg_lambda=1,
-        max_depth=-1, n_estimators=10000, objective='binary',
+        boosting_type='gbdt', num_leaves=140, reg_alpha=0.0, reg_lambda=1,
+        max_depth=-1, n_estimators=4000, objective='binary',
         subsample=0.7, colsample_bytree=0.7, subsample_freq=1,
-        learning_rate=0.02, min_child_weight=50, random_state=521, n_jobs=100
+        learning_rate=0.03, min_child_weight=50, random_state=2018, n_jobs=100
     )
     clf.fit(train_x, train_y, eval_set=[(train_x, train_y)], eval_metric='auc',early_stopping_rounds=100)
     res['score'] = clf.predict_proba(test_x)[:,1]
     res['score'] = res['score'].apply(lambda x: float('%.6f' % x))
     res.to_csv('submission.csv', index=False)
-    os.system('zip baseline2.zip submission.csv')
+    os.system('zip adFeat_tunePara.zip submission.csv')
     return clf
 
 model=LGB_predict(train_x,train_y,test_x,res)
